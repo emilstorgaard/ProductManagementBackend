@@ -1,10 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using ProductManagementBackend.Data;
 using ProductManagementBackend.Models.Dtos;
-using ProductManagementBackend.Models.Entities;
 using ProductManagementBackend.Services;
-using System.Linq;
 
 namespace ProductManagementBackend.Controllers
 {
@@ -19,14 +16,16 @@ namespace ProductManagementBackend.Controllers
             _productService = productService;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
+        [EnableCors]
         public IActionResult GetAllProducts()
         {
             var allProducts = _productService.GetAllProducts();
             return Ok(allProducts);
         }
 
-        [HttpGet("page")]
+        [HttpGet]
+        [EnableCors]
         public IActionResult GetAllProductsByPage(int page = 1)
         {
             const int pageSize = 10;
@@ -45,6 +44,7 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpGet]
+        [EnableCors]
         [Route("{id:guid}")]
         public IActionResult GetProductById(Guid id)
         {
@@ -56,7 +56,7 @@ namespace ProductManagementBackend.Controllers
             }
 
             return Ok(product);
-        } 
+        }
 
         [HttpPost]
         public IActionResult AddProduct(AddProductDto addProductDto)
@@ -66,6 +66,7 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpPut]
+        [EnableCors]
         [Route("{id:guid}")]
         public IActionResult UpdateProduct(Guid id, UpdateProductDto updateProductDto)
         {
@@ -80,6 +81,7 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpDelete]
+        [EnableCors]
         [Route("{id:guid}")]
         public IActionResult DeleteProduct(Guid id)
         {
