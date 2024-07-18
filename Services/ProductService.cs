@@ -19,13 +19,37 @@ namespace ProductManagementBackend.Services
             return _dbContext.Products.OrderByDescending(p => p.CreatedAt).ToList();
         }
 
-        public (int TotalProducts, int TotalPages, List<Product> Products) GetProductsByPage(int page, int pageSize)
+        public (int TotalProducts, int TotalPages, List<Product> Products) GetProductsByPageandSort(int page, int pageSize, string sort)
         {
+            // Validate page
+            if (page < 1)
+                page = 1;
+
             var totalProducts = _dbContext.Products.Count();
             var totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
 
-            var products = _dbContext.Products
-                .OrderByDescending(p => p.CreatedAt)
+            IQueryable<Product> query = _dbContext.Products.OrderByDescending(p => p.CreatedAt); // Default sort;
+
+            var sortLower = sort.ToLower();
+            if (sortLower == "a-z")
+            {
+                query = _dbContext.Products.OrderBy(p => p.Name);
+            }
+            else if (sortLower == "z-a")
+            {
+                query = _dbContext.Products.OrderByDescending(p => p.Name);
+            }
+            else if (sortLower == "newest")
+            {
+                query = _dbContext.Products.OrderByDescending(p => p.CreatedAt);
+            }
+            else if (sortLower == "oldest")
+            {
+                query = _dbContext.Products.OrderBy(p => p.CreatedAt);
+            }
+ 
+            // Retrieve products for the specified page
+            var products = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();

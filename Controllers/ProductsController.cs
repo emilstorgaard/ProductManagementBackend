@@ -26,10 +26,10 @@ namespace ProductManagementBackend.Controllers
 
         [HttpGet]
         [EnableCors]
-        public IActionResult GetAllProductsByPage(int page = 1)
+        public IActionResult GetAllProductsByPage(int page = 1, string sort = "")
         {
             const int pageSize = 10;
-            var (totalProducts, totalPages, products) = _productService.GetProductsByPage(page, pageSize);
+            var (totalProducts, totalPages, products) = _productService.GetProductsByPageandSort(page, pageSize, sort);
 
             var result = new
             {
