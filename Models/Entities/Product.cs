@@ -10,9 +10,6 @@
 
         public DateTime CreatedAt { get; set; }
 
-        public Product()
-        {
-            CreatedAt = DateTime.UtcNow;
-        }
+        public DateTime UpdatedAt { get; set; }
     }
 }

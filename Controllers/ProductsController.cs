@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ProductManagementBackend.Models.Dtos;
 using ProductManagementBackend.Services;
 
@@ -16,20 +15,19 @@ namespace ProductManagementBackend.Controllers
             _productService = productService;
         }
 
-        [HttpGet("all")]
-        [EnableCors]
-        public IActionResult GetAllProducts()
+        [HttpGet]
+        [Route("all")]
+        public async Task<IActionResult> GetAllProducts()
         {
-            var allProducts = _productService.GetAllProducts();
+            var allProducts = await _productService.GetAllProductsAsync();
             return Ok(allProducts);
         }
 
         [HttpGet]
-        [EnableCors]
-        public IActionResult GetAllProductsByPage(int page = 1, string sort = "")
+        public async Task<IActionResult> GetAllProductsByPage(int page = 1, string sort = "")
         {
             const int pageSize = 10;
-            var (totalProducts, totalPages, products) = _productService.GetProductsByPageandSort(page, pageSize, sort);
+            var (totalProducts, totalPages, products) = await _productService.GetProductsByPageandSortAsync(page, pageSize, sort);
 
             var result = new
             {
@@ -44,11 +42,10 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpGet]
-        [EnableCors]
         [Route("{id:guid}")]
-        public IActionResult GetProductById(Guid id)
+        public async Task<IActionResult> GetProductById(Guid id)
         {
-            var product = _productService.GetProductById(id);
+            var product = await _productService.GetProductByIdAsync(id);
 
             if (product == null)
             {
@@ -59,18 +56,17 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddProduct(AddProductDto addProductDto)
+        public async Task<IActionResult> AddProduct(AddProductDto addProductDto)
         {
-            var productEntity = _productService.AddProduct(addProductDto);
+            var productEntity = await _productService.AddProductAsync(addProductDto);
             return Ok(productEntity);
         }
 
         [HttpPut]
-        [EnableCors]
         [Route("{id:guid}")]
-        public IActionResult UpdateProduct(Guid id, UpdateProductDto updateProductDto)
+        public async Task<IActionResult> UpdateProduct(Guid id, UpdateProductDto updateProductDto)
         {
-            var product = _productService.UpdateProduct(id, updateProductDto);
+            var product = await _productService.UpdateProductAsync(id, updateProductDto);
 
             if (product == null)
             {
@@ -81,11 +77,10 @@ namespace ProductManagementBackend.Controllers
         }
 
         [HttpDelete]
-        [EnableCors]
         [Route("{id:guid}")]
-        public IActionResult DeleteProduct(Guid id)
+        public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            var result = _productService.DeleteProduct(id);
+            var result = await _productService.DeleteProductAsync(id);
 
             if (!result)
             {

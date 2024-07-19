@@ -5,7 +5,7 @@ using ProductManagementBackend.Models.Entities;
 
 namespace ProductManagementBackend.Services
 {
-    public class ProductService
+    public class ProductService : IProductService
     {
         private readonly ApplicationDbContext _dbContext;
 
@@ -14,72 +14,50 @@ namespace ProductManagementBackend.Services
             _dbContext = dbContext;
         }
 
-        public List<Product> GetAllProducts()
+        public async Task<List<Product>> GetAllProductsAsync()
         {
-            return _dbContext.Products.OrderByDescending(p => p.CreatedAt).ToList();
+            return await _dbContext.Products.OrderByDescending(p => p.CreatedAt).ToListAsync();
         }
 
-        public (int TotalProducts, int TotalPages, List<Product> Products) GetProductsByPageandSort(int page, int pageSize, string sort)
+        public async Task<(int TotalProducts, int TotalPages, List<Product> Products)> GetProductsByPageandSortAsync(int page, int pageSize, string sort)
         {
-            // Validate page
-            if (page < 1)
-                page = 1;
-
-            var totalProducts = _dbContext.Products.Count();
+            var totalProducts = await _dbContext.Products.CountAsync();
             var totalPages = (int)Math.Ceiling(totalProducts / (double)pageSize);
 
-            IQueryable<Product> query = _dbContext.Products.OrderByDescending(p => p.CreatedAt); // Default sort;
+            IQueryable<Product> query = SortProducts(sort);
 
-            var sortLower = sort.ToLower();
-            if (sortLower == "a-z")
-            {
-                query = _dbContext.Products.OrderBy(p => p.Name);
-            }
-            else if (sortLower == "z-a")
-            {
-                query = _dbContext.Products.OrderByDescending(p => p.Name);
-            }
-            else if (sortLower == "newest")
-            {
-                query = _dbContext.Products.OrderByDescending(p => p.CreatedAt);
-            }
-            else if (sortLower == "oldest")
-            {
-                query = _dbContext.Products.OrderBy(p => p.CreatedAt);
-            }
- 
-            // Retrieve products for the specified page
-            var products = query
+            var products = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
             return (totalProducts, totalPages, products);
         }
 
-        public Product GetProductById(Guid id)
+        public async Task<Product> GetProductByIdAsync(Guid id)
         {
-            return _dbContext.Products.Find(id);
+            return await _dbContext.Products.FindAsync(id);
         }
 
-        public Product AddProduct(AddProductDto addProductDto)
+        public async Task<Product> AddProductAsync(AddProductDto addProductDto)
         {
             var productEntity = new Product
             {
                 Name = addProductDto.Name,
-                Description = addProductDto.Description
+                Description = addProductDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
-            _dbContext.Products.Add(productEntity);
-            _dbContext.SaveChanges();
+            await _dbContext.Products.AddAsync(productEntity);
+            await _dbContext.SaveChangesAsync();
 
             return productEntity;
         }
 
-        public Product UpdateProduct(Guid id, UpdateProductDto updateProductDto)
+        public async Task<Product> UpdateProductAsync(Guid id, UpdateProductDto updateProductDto)
         {
-            var product = _dbContext.Products.Find(id);
-
+            var product = await _dbContext.Products.FindAsync(id);
             if (product == null)
             {
                 return null;
@@ -87,25 +65,41 @@ namespace ProductManagementBackend.Services
 
             product.Name = updateProductDto.Name;
             product.Description = updateProductDto.Description;
+            product.UpdatedAt = DateTime.UtcNow;
 
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             return product;
         }
 
-        public bool DeleteProduct(Guid id)
+        public async Task<bool> DeleteProductAsync(Guid id)
         {
-            var product = _dbContext.Products.Find(id);
-
+            var product = await _dbContext.Products.FindAsync(id);
             if (product == null)
             {
                 return false;
             }
 
             _dbContext.Products.Remove(product);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             return true;
+        }
+
+        private IQueryable<Product> SortProducts(string sort)
+        {
+            IQueryable<Product> query = _dbContext.Products;
+
+            query = sort.ToLower() switch
+            {
+                "a-z" => query.OrderBy(p => p.Name),
+                "z-a" => query.OrderByDescending(p => p.Name),
+                "newest" => query.OrderByDescending(p => p.CreatedAt),
+                "oldest" => query.OrderBy(p => p.CreatedAt),
+                _ => query.OrderByDescending(p => p.CreatedAt), // Default sort
+            };
+
+            return query;
         }
     }
 }
